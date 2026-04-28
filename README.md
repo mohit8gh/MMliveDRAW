@@ -1,4 +1,4 @@
-# 🖐️ GestureDraw — Finger Painting Studio
+# 🖐️ MMliveDRAW — Finger Painting Studio
 
 > Paint in mid-air using just your hand. No stylus, no touch, no installs — just your webcam and your fingers.
 
@@ -6,7 +6,7 @@
 
 ## ✨ What is this?
 
-GestureDraw is a browser-based creative painting tool powered by **AI hand tracking**. It uses your webcam and Google's MediaPipe library to detect your hand in real time — then turns your finger movements into brush strokes on a neon canvas.
+MMliveDRAW is a browser-based creative painting tool powered by **AI hand tracking**. It uses your webcam and Google's MediaPipe library to detect your hand in real time — then turns your finger movements into brush strokes on a neon canvas.
 
 Just open the HTML file in your browser, allow camera access, and start painting.
 
