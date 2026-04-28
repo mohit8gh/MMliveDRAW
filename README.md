@@ -2,7 +2,7 @@
 
 > Paint in mid-air using just your hand. No stylus, no touch, no installs — just your webcam and your fingers.
 
-![GestureDraw Banner](https://ibb.co/6Jv47hWF)
+![GestureDraw Banner](https://i.ibb.co/93wqkXrW/Chat-GPT-Image-Apr-28-2026-08-23-46-AM-1.png)
 
 ## ✨ What is this?
 
@@ -90,7 +90,7 @@ gesture-draw/
 <!-- Add your screenshots here -->
 | Start Screen | Drawing Mode |
 |---|---|
-| ![drawing](https://ibb.co/6Jv47hWF) |
+| ![drawing](https://i.ibb.co/93wqkXrW/Chat-GPT-Image-Apr-28-2026-08-23-46-AM-1.png) |
 
 ---
 
