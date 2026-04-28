@@ -3,7 +3,6 @@
 > Paint in mid-air using just your hand. No stylus, no touch, no installs — just your webcam and your fingers.
 
 ![GestureDraw Banner](https://ibb.co/6Jv47hWF)
-<!-- Replace the above with a real screenshot of your app -->
 
 ## ✨ What is this?
 
@@ -45,7 +44,7 @@ No build tools, no npm, no setup needed.
 
 1. **Clone or download** this repo
    ```bash
-   git clone https://github.com/yourusername/gesture-draw.git
+   git clone https://github.com/mohit8gh/gesture-draw.git
    ```
 
 2. **Open** `gesture-draw.html` in your browser (Chrome or Edge recommended)
@@ -60,8 +59,7 @@ No build tools, no npm, no setup needed.
 
 ## 🌐 Live Demo
 
-👉 **[Try it live here](https://your-site.com/gesture-draw.html)**
-<!-- Replace with your actual hosted URL -->
+👉 **[Try it live here](https://livecamdraw.infinityfreeapp.com/)**
 
 ---
 
@@ -92,7 +90,7 @@ gesture-draw/
 <!-- Add your screenshots here -->
 | Start Screen | Drawing Mode |
 |---|---|
-| ![start](https://i.imgur.com/R0Iy70l.png) | ![drawing](https://ibb.co/6Jv47hWF) |
+| ![drawing](https://ibb.co/6Jv47hWF) |
 
 ---
 
@@ -132,4 +130,4 @@ MIT — free to use, modify, and share.
 
 ---
 
-*Made by [your name](https://github.com/yourusername)*
+*Made by [Mohit Milan](https://github.com/mohit8gh)*
