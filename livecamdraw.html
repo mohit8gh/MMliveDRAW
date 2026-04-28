@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MMliveDRAW — Finger Painting Studio</title>
+
+<!-- SEO -->
+<meta name="description" content="Paint in mid-air using just your hand! GestureDraw uses your webcam and AI hand tracking to turn your fingers into a paintbrush — no touch needed.">
+<meta name="keywords" content="gesture drawing, finger painting, hand tracking, AI art, webcam drawing, MediaPipe, creative tool">
+<meta name="author" content="GestureDraw">
+
+<!-- Open Graph (WhatsApp, Facebook, LinkedIn, iMessage) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="GestureDraw — Finger Painting Studio">
+<meta property="og:description" content="Paint in mid-air using just your hand! AI-powered hand tracking turns your fingers into a paintbrush. No touch required.">
+<meta property="og:image" content="https://ibb.co/6Jv47hWF">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://livecamdraw.infinityfreeapp.com/">
+<meta property="og:site_name" content="GestureDraw">
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GestureDraw — Finger Painting Studio">
+<meta name="twitter:description" content="Paint in mid-air using just your hand! AI-powered hand tracking turns your fingers into a paintbrush. No touch required.">
+<meta name="twitter:image" content="https://ibb.co/6Jv47hWF">
+<meta name="twitter:site" content="@mohit3641">
+<meta name="twitter:creator" content="@mohit3641">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --neon-cyan: #00f5ff;
+    --neon-pink: #ff006e;
+    --neon-purple: #8b00ff;
+    --neon-green: #00ff88;
+    --neon-amber: #ffaa00;
+    --glass-bg: rgba(5, 5, 20, 0.7);
+    --glass-border: rgba(0, 245, 255, 0.15);
+    --glass-border-hover: rgba(0, 245, 255, 0.4);
+    --panel-radius: 16px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #000;
+    color: #fff;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    user-select: none;
+  }
+
+  #bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  #app {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+  }
+
+  /* WEBCAM */
+  #webcam {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.12;
+    transform: scaleX(-1);
+    pointer-events: none;
+  }
+
+  /* DRAWING CANVAS */
+  #draw-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  /* TRACKING CANVAS */
+  #track-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  /* TOP BAR */
+  #topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+    z-index: 100;
+  }
+
+  #logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 20px;
+    font-weight: 900;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+  }
+
+  #status-display {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--neon-cyan);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    opacity: 0.85;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--neon-green);
+    box-shadow: 0 0 8px var(--neon-green);
+    animation: pulse 2s infinite;
+  }
+
+  .status-dot.red { background: var(--neon-pink); box-shadow: 0 0 8px var(--neon-pink); }
+  .status-dot.amber { background: var(--neon-amber); box-shadow: 0 0 8px var(--neon-amber); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+
+  /* TOOL PANEL */
+  #tool-panel {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-40%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--panel-radius);
+    padding: 14px 10px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 0 40px rgba(0, 245, 255, 0.08), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .tool-btn {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.5);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 9px;
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tool-btn:hover {
+    background: rgba(0, 245, 255, 0.08);
+    border-color: var(--glass-border-hover);
+    color: var(--neon-cyan);
+    transform: translateX(3px);
+  }
+
+  .tool-btn.active {
+    background: rgba(0, 245, 255, 0.12);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    box-shadow: 0 0 16px rgba(0, 245, 255, 0.2);
+  }
+
+  .tool-btn svg { width: 22px; height: 22px; }
+
+  .tool-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 4px 4px;
+  }
+
+  /* COLOR PALETTE */
+  #color-panel {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--panel-radius);
+    padding: 14px 14px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 0 40px rgba(139, 0, 255, 0.08), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .color-swatch {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 2px solid rgba(255,255,255,0.1);
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .color-swatch:hover {
+    transform: scale(1.15) translateX(-6px);
+    border-color: rgba(255,255,255,0.5);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  .color-swatch.active {
+    border-color: #fff;
+    transform: scale(1.2) translateX(-6px);
+    box-shadow: 0 0 20px currentColor;
+  }
+
+  /* SIZE SLIDER */
+  #size-panel {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    padding: 12px 24px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  #size-panel label {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.4);
+    white-space: nowrap;
+  }
+
+  #brush-size {
+    -webkit-appearance: none;
+    width: 140px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  #brush-size::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--neon-cyan);
+    box-shadow: 0 0 10px var(--neon-cyan);
+    cursor: pointer;
+  }
+
+  #size-preview {
+    border-radius: 50%;
+    background: var(--neon-cyan);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    box-shadow: 0 0 8px rgba(0, 245, 255, 0.5);
+  }
+
+  /* ACTION BUTTONS */
+  #action-bar {
+    position: absolute;
+    top: 68px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .action-btn {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.5);
+    cursor: pointer;
+    font-family: 'Orbitron', monospace;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(10px);
+  }
+
+  .action-btn:hover {
+    color: #fff;
+    border-color: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+  }
+
+  .action-btn.danger { border-color: rgba(255, 0, 110, 0.3); color: var(--neon-pink); }
+  .action-btn.danger:hover { background: rgba(255, 0, 110, 0.1); border-color: var(--neon-pink); }
+  .action-btn.success { border-color: rgba(0, 255, 136, 0.3); color: var(--neon-green); }
+  .action-btn.success:hover { background: rgba(0, 255, 136, 0.1); border-color: var(--neon-green); }
+  .action-btn.record { border-color: rgba(255, 0, 110, 0.5); }
+  .action-btn.recording { background: rgba(255, 0, 110, 0.15); border-color: var(--neon-pink); color: var(--neon-pink); animation: rec-pulse 1s infinite; }
+
+  @keyframes rec-pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  /* GESTURE INDICATOR */
+  #gesture-display {
+    position: absolute;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--neon-cyan);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  #gesture-display.active {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
+  }
+
+  /* INSTRUCTIONS OVERLAY */
+  #instructions {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 200;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  #instructions h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(24px, 4vw, 48px);
+    font-weight: 900;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple), var(--neon-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+    letter-spacing: 4px;
+  }
+
+  #instructions p {
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+    letter-spacing: 2px;
+    font-family: 'Orbitron', monospace;
+  }
+
+  #start-btn {
+    margin-top: 32px;
+    padding: 14px 40px;
+    border-radius: 50px;
+    border: 1px solid var(--neon-cyan);
+    background: rgba(0, 245, 255, 0.08);
+    color: var(--neon-cyan);
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    pointer-events: all;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 30px rgba(0, 245, 255, 0.1);
+  }
+
+  #start-btn:hover {
+    background: rgba(0, 245, 255, 0.16);
+    box-shadow: 0 0 40px rgba(0, 245, 255, 0.25);
+    transform: scale(1.04);
+  }
+
+  /* LOADING */
+  #loading {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 200;
+    text-align: center;
+    font-family: 'Orbitron', monospace;
+    color: var(--neon-cyan);
+    letter-spacing: 3px;
+    font-size: 13px;
+    display: none;
+  }
+
+  .spinner {
+    width: 40px; height: 40px;
+    border: 2px solid rgba(0, 245, 255, 0.15);
+    border-top-color: var(--neon-cyan);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TOAST */
+  #toast {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    z-index: 300;
+    background: rgba(0, 245, 255, 0.1);
+    border: 1px solid var(--neon-cyan);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--neon-cyan);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* FLOATING ELEMENTS */
+  .floating-dot {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 50;
+    animation: float-anim var(--dur, 4s) ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  @keyframes float-anim {
+    from { transform: translate(0, 0) rotate(0deg); }
+    to { transform: translate(var(--dx, 10px), var(--dy, -15px)) rotate(var(--dr, 20deg)); }
+  }
+
+  /* CURSOR DOT */
+  #cursor-dot {
+    position: fixed;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--neon-cyan);
+    box-shadow: 0 0 12px var(--neon-cyan);
+    pointer-events: none;
+    z-index: 999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.05s, width 0.2s, height 0.2s;
+    display: none;
+  }
+
+  #opacity-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--neon-purple);
+    box-shadow: 0 0 8px var(--neon-purple), 0 0 2px #fff;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  #opacity-slider::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--neon-purple);
+    box-shadow: 0 0 8px var(--neon-purple);
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  #ui-layer { display: none; }
+  #ui-layer.visible { display: block; }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div id="app">
+  <video id="webcam" autoplay muted playsinline></video>
+  <canvas id="draw-canvas"></canvas>
+  <canvas id="track-canvas"></canvas>
+  <div id="cursor-dot"></div>
+
+  <!-- Instructions overlay -->
+  <div id="instructions">
+    <h1>MM liveDRAW</h1>
+    <p>FINGER-POWERED CREATIVE STUDIO</p>
+    <button id="start-btn" onclick="startApp()">INITIALIZE CAMERA</button>
+    <p style="margin-top:20px;font-size:11px;color:rgba(255,255,255,0.25)">Requires webcam access · Works best in Chrome</p>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="spinner"></div>
+    LOADING MEDIAPIPE HANDS...
+  </div>
+
+  <!-- Main UI layer (hidden until camera starts) -->
+  <div id="ui-layer">
+
+    <!-- Top bar -->
+    <div id="topbar">
+      <div id="logo">MM liveDRAW</div>
+      <div id="status-display">
+        <div class="status-item">
+          <div class="status-dot" id="track-dot"></div>
+          <span id="track-status">TRACKING</span>
+        </div>
+        <div class="status-item">
+          <div class="status-dot amber" id="fps-dot"></div>
+          <span id="fps-display">-- FPS</span>
+        </div>
+        <div class="status-item">
+          <div class="status-dot red" id="rec-dot" style="display:none"></div>
+          <span id="rec-time" style="display:none">00:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tool panel -->
+    <div id="tool-panel">
+      <button class="tool-btn active" data-tool="pencil" onclick="setTool('pencil')" title="Pencil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z"/>
+        </svg>
+        PENCIL
+      </button>
+      <button class="tool-btn" data-tool="brush" onclick="setTool('brush')" title="Brush">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/>
+        </svg>
+        BRUSH
+      </button>
+      <button class="tool-btn" data-tool="highlighter" onclick="setTool('highlighter')" title="Highlighter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+        </svg>
+        MARKER
+      </button>
+      <div class="tool-divider"></div>
+      <button class="tool-btn" data-tool="eraser" onclick="setTool('eraser')" title="Eraser">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+        </svg>
+        ERASE
+      </button>
+      <button class="tool-btn" data-tool="fill" onclick="setTool('fill')" title="Fill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M15.232 5.232l3.536 3.536M9 11l6-6M3 21l6-6m0 0l-3-3 9-9 3 3-9 9z"/>
+        </svg>
+        FILL
+      </button>
+      <div class="tool-divider"></div>
+      <button class="tool-btn" onclick="undoAction()" title="Undo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
+        </svg>
+        UNDO
+      </button>
+      <button class="tool-btn" onclick="redoAction()" title="Redo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3"/>
+        </svg>
+        REDO
+      </button>
+      <div class="tool-divider"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 0;">
+        <span style="font-family:'Orbitron',monospace;font-size:7px;letter-spacing:1.5px;color:rgba(255,255,255,0.35);">OPACITY</span>
+        <div style="position:relative;display:flex;align-items:center;justify-content:center;height:90px;">
+          <input type="range" id="opacity-slider" min="10" max="100" value="100"
+            style="-webkit-appearance:none;appearance:none;width:90px;height:3px;background:linear-gradient(90deg,rgba(139,0,255,0.2),var(--neon-purple));border-radius:2px;outline:none;cursor:pointer;
+            writing-mode:vertical-lr;direction:rtl;width:3px;height:90px;">
+        </div>
+        <span id="opacity-val" style="font-family:'Orbitron',monospace;font-size:7px;color:rgba(255,255,255,0.4);">100%</span>
+      </div>
+    </div>
+
+    <!-- Color panel -->
+    <div id="color-panel">
+      <div id="color-swatches"></div>
+    </div>
+
+    <!-- Size panel -->
+    <div id="size-panel">
+      <label>SIZE</label>
+      <input type="range" id="brush-size" min="2" max="60" value="8">
+      <div id="size-preview" style="width:8px;height:8px;"></div>
+    </div>
+
+    <!-- Gesture display -->
+    <div id="gesture-display">☝ POINT FINGER TO DRAW</div>
+
+    <!-- Action buttons -->
+    <div id="action-bar">
+      <button class="action-btn record" id="rec-btn" onclick="toggleRecording()">
+        <span id="rec-icon">●</span> <span id="rec-label">RECORD</span>
+      </button>
+      <button class="action-btn success" onclick="captureScreenshot()">📷 SCREENSHOT</button>
+      <button class="action-btn danger" onclick="clearCanvas()">✕ CLEAR</button>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast"></div>
+  </div>
+</div>
+
+<!-- MediaPipe -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────
+const state = {
+  tool: 'pencil',
+  color: '#00f5ff',
+  brushSize: 8,
+  opacity: 1,
+  drawing: false,
+  lastX: null, lastY: null,
+  gesture: 'none',
+  hands: null,
+  undoStack: [],
+  redoStack: [],
+  recording: false,
+  mediaRecorder: null,
+  recordChunks: [],
+  recordStart: 0,
+  fps: 0,
+  frameCount: 0,
+  lastFpsTime: 0,
+  audioCtx: null,
+};
+
+// Colors palette
+const COLORS = [
+  '#ff006e','#ff4500','#ffaa00','#00ff88',
+  '#00f5ff','#0066ff','#8b00ff','#ff00ff',
+  '#ffffff','#aaaaaa','#444444','#000000',
+];
+
+const TOOLS = {
+  pencil:      { size: 1,    composite: 'source-over', label: '1F DRAW' },
+  brush:       { size: 2.5,  composite: 'source-over', label: '1F DRAW' },
+  highlighter: { size: 3,    composite: 'multiply',    label: '1F DRAW' },
+  eraser:      { size: 1,    composite: 'destination-out', label: 'PALM ERASE' },
+  fill:        { size: 1,    composite: 'source-over', label: 'TAP FILL' },
+};
+
+// ─── CANVAS SETUP ─────────────────────────────────────────
+const bgCanvas = document.getElementById('bg-canvas');
+const bgCtx = bgCanvas.getContext('2d');
+const drawCanvas = document.getElementById('draw-canvas');
+const drawCtx = drawCanvas.getContext('2d');
+const trackCanvas = document.getElementById('track-canvas');
+const trackCtx = trackCanvas.getContext('2d');
+const webcam = document.getElementById('webcam');
+
+function resizeCanvases() {
+  [bgCanvas, drawCanvas, trackCanvas].forEach(c => {
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+  });
+}
+resizeCanvases();
+window.addEventListener('resize', () => { resizeCanvases(); redrawFromHistory(); });
+
+// ─── ANIMATED BACKGROUND ──────────────────────────────────
+const bgParticles = Array.from({length: 80}, () => ({
+  x: Math.random() * window.innerWidth,
+  y: Math.random() * window.innerHeight,
+  r: Math.random() * 1.5 + 0.2,
+  vx: (Math.random() - 0.5) * 0.3,
+  vy: (Math.random() - 0.5) * 0.3,
+  hue: Math.random() * 360,
+  alpha: Math.random() * 0.5 + 0.1,
+}));
+
+function animateBg() {
+  bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+  bgCtx.fillStyle = '#000010';
+  bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+  bgParticles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = bgCanvas.width;
+    if (p.x > bgCanvas.width) p.x = 0;
+    if (p.y < 0) p.y = bgCanvas.height;
+    if (p.y > bgCanvas.height) p.y = 0;
+    bgCtx.beginPath();
+    bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    bgCtx.fillStyle = `hsla(${p.hue}, 80%, 70%, ${p.alpha})`;
+    bgCtx.fill();
+  });
+
+  requestAnimationFrame(animateBg);
+}
+animateBg();
+
+// ─── UI SETUP ─────────────────────────────────────────────
+function buildColorSwatches() {
+  const container = document.getElementById('color-swatches');
+  container.style.display = 'flex';
+  container.style.flexDirection = 'column';
+  container.style.gap = '8px';
+
+  COLORS.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch';
+    sw.style.background = c;
+    sw.style.boxShadow = `0 0 10px ${c}55`;
+    sw.dataset.color = c;
+    if (c === state.color) { sw.classList.add('active'); }
+    sw.onclick = () => {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      state.color = c;
+      document.getElementById('size-preview').style.background = c;
+      document.getElementById('size-preview').style.boxShadow = `0 0 8px ${c}`;
+      playTick(440);
+    };
+    container.appendChild(sw);
+  });
+}
+buildColorSwatches();
+
+// Brush size slider
+const brushSlider = document.getElementById('brush-size');
+const sizePreview = document.getElementById('size-preview');
+brushSlider.oninput = () => {
+  state.brushSize = parseInt(brushSlider.value);
+  sizePreview.style.width = Math.min(state.brushSize, 32) + 'px';
+  sizePreview.style.height = Math.min(state.brushSize, 32) + 'px';
+};
+
+// Opacity slider
+document.getElementById('opacity-slider').oninput = function() {
+  state.opacity = this.value / 100;
+  document.getElementById('opacity-val').textContent = this.value + '%';
+};
+
+// ─── TOOL SWITCHING ───────────────────────────────────────
+function setTool(tool) {
+  state.tool = tool;
+  document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.tool-btn[data-tool="${tool}"]`).classList.add('active');
+  playTick(330);
+}
+
+// ─── UNDO / REDO ─────────────────────────────────────────
+function saveSnapshot() {
+  state.undoStack.push(drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height));
+  if (state.undoStack.length > 40) state.undoStack.shift();
+  state.redoStack = [];
+}
+
+function undoAction() {
+  if (state.undoStack.length === 0) return;
+  state.redoStack.push(drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height));
+  const snap = state.undoStack.pop();
+  drawCtx.putImageData(snap, 0, 0);
+  playTick(220);
+  showToast('UNDO');
+}
+
+function redoAction() {
+  if (state.redoStack.length === 0) return;
+  state.undoStack.push(drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height));
+  const snap = state.redoStack.pop();
+  drawCtx.putImageData(snap, 0, 0);
+  playTick(330);
+  showToast('REDO');
+}
+
+function redrawFromHistory() {
+  // After resize, restore the last snapshot if any
+  if (state.undoStack.length > 0) {
+    const last = state.undoStack[state.undoStack.length - 1];
+    drawCtx.putImageData(last, 0, 0);
+  }
+}
+
+function clearCanvas() {
+  saveSnapshot();
+  drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+  playTick(180);
+  showToast('CANVAS CLEARED');
+}
+
+// ─── DRAWING FUNCTIONS ────────────────────────────────────
+function getToolSettings() {
+  const base = TOOLS[state.tool] || TOOLS.pencil;
+  const sz = state.brushSize * base.size;
+  return { size: sz, composite: base.composite };
+}
+
+function drawStroke(x, y, lx, ly) {
+  const { size, composite } = getToolSettings();
+  drawCtx.save();
+  drawCtx.globalCompositeOperation = composite;
+  drawCtx.globalAlpha = state.tool === 'highlighter' ? 0.35 : state.opacity;
+  drawCtx.strokeStyle = state.color;
+  drawCtx.lineWidth = size;
+  drawCtx.lineCap = 'round';
+  drawCtx.lineJoin = 'round';
+
+  if (state.tool === 'brush') {
+    // Soft brush with shadow glow
+    drawCtx.shadowColor = state.color;
+    drawCtx.shadowBlur = size * 1.5;
+  }
+
+  drawCtx.beginPath();
+  drawCtx.moveTo(lx, ly);
+  drawCtx.quadraticCurveTo(lx, ly, x, y);
+  drawCtx.stroke();
+  drawCtx.restore();
+}
+
+function floodFill(x, y, fillColor) {
+  const imgData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+  const data = imgData.data;
+  const w = drawCanvas.width;
+  const h = drawCanvas.height;
+
+  const ix = Math.round(x), iy = Math.round(y);
+  const idx = (iy * w + ix) * 4;
+  const tr = data[idx], tg = data[idx+1], tb = data[idx+2], ta = data[idx+3];
+
+  // Parse fill color
+  const tmp = document.createElement('canvas');
+  const tctx = tmp.getContext('2d');
+  tctx.fillStyle = fillColor;
+  tctx.fillRect(0,0,1,1);
+  const cd = tctx.getImageData(0,0,1,1).data;
+  const fr = cd[0], fg = cd[1], fb = cd[2];
+
+  if (tr === fr && tg === fg && tb === fb) return;
+
+  const stack = [ix + iy * w];
+  const visited = new Uint8Array(w * h);
+
+  while (stack.length) {
+    const pos = stack.pop();
+    const px = pos % w;
+    const py = Math.floor(pos / w);
+    if (px < 0 || px >= w || py < 0 || py >= h) continue;
+    if (visited[pos]) continue;
+    visited[pos] = 1;
+    const i = pos * 4;
+    const match = Math.abs(data[i]-tr)<32 && Math.abs(data[i+1]-tg)<32 && Math.abs(data[i+2]-tb)<32 && Math.abs(data[i+3]-ta)<32;
+    if (!match) continue;
+    data[i] = fr; data[i+1] = fg; data[i+2] = fb; data[i+3] = 255;
+    stack.push(pos-1, pos+1, pos-w, pos+w);
+  }
+  drawCtx.putImageData(imgData, 0, 0);
+}
+
+// ─── GESTURE RECOGNITION ─────────────────────────────────
+function countExtendedFingers(landmarks) {
+  // landmarks[4] = thumb tip, [8]=index, [12]=middle, [16]=ring, [20]=pinky
+  // Tip above pip = extended
+  const tips =  [8, 12, 16, 20];
+  const pips =  [6, 10, 14, 18];
+  let count = 0;
+  for (let i = 0; i < tips.length; i++) {
+    if (landmarks[tips[i]].y < landmarks[pips[i]].y) count++;
+  }
+  return count;
+}
+
+function isOpenPalm(landmarks) {
+  return countExtendedFingers(landmarks) >= 4;
+}
+
+function isTwoFingers(landmarks) {
+  const count = countExtendedFingers(landmarks);
+  return count === 2;
+}
+
+function isOneFingerPoint(landmarks) {
+  const count = countExtendedFingers(landmarks);
+  return count === 1;
+}
+
+function isPinch(landmarks) {
+  const thumb = landmarks[4];
+  const index = landmarks[8];
+  const dist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
+  return dist < 0.06;
+}
+
+function getLandmarkPos(lm) {
+  // Mirror X for selfie cam
+  return {
+    x: (1 - lm.x) * drawCanvas.width,
+    y: lm.y * drawCanvas.height,
+  };
+}
+
+// ─── MAIN TRACKING LOOP ───────────────────────────────────
+let lastGestureMode = '';
+let fingerTipTrail = [];
+
+function onHandResults(results) {
+  // FPS counter
+  state.frameCount++;
+  const now = performance.now();
+  if (now - state.lastFpsTime > 1000) {
+    state.fps = state.frameCount;
+    state.frameCount = 0;
+    state.lastFpsTime = now;
+    document.getElementById('fps-display').textContent = state.fps + ' FPS';
+  }
+
+  trackCtx.clearRect(0, 0, trackCanvas.width, trackCanvas.height);
+
+  if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+    state.drawing = false;
+    state.lastX = null; state.lastY = null;
+    setGestureDisplay('☝ POINT FINGER TO DRAW', false);
+    document.getElementById('track-dot').classList.add('red');
+    return;
+  }
+
+  document.getElementById('track-dot').classList.remove('red');
+  const landmarks = results.multiHandLandmarks[0];
+
+  // Determine gesture
+  const extFingers = countExtendedFingers(landmarks);
+  const palm = isOpenPalm(landmarks);
+  const twoFing = isTwoFingers(landmarks);
+  const oneFing = isOneFingerPoint(landmarks);
+  const pinch = isPinch(landmarks);
+
+  // Draw hand skeleton
+  drawHandSkeleton(landmarks);
+
+  const fingertip = getLandmarkPos(landmarks[8]);
+
+  if (palm) {
+    // ERASE mode
+    setGestureDisplay('✋ PALM — ERASE MODE', true);
+    if (lastGestureMode !== 'erase') { saveSnapshot(); lastGestureMode = 'erase'; }
+    const sz = state.brushSize * 5;
+    drawCtx.save();
+    drawCtx.globalCompositeOperation = 'destination-out';
+    drawCtx.beginPath();
+    drawCtx.arc(fingertip.x, fingertip.y, sz, 0, Math.PI * 2);
+    drawCtx.fill();
+    drawCtx.restore();
+
+    // Visual eraser circle
+    trackCtx.beginPath();
+    trackCtx.arc(fingertip.x, fingertip.y, sz, 0, Math.PI * 2);
+    trackCtx.strokeStyle = 'rgba(255,255,255,0.5)';
+    trackCtx.lineWidth = 2;
+    trackCtx.setLineDash([4, 4]);
+    trackCtx.stroke();
+    trackCtx.setLineDash([]);
+
+    state.drawing = false;
+    state.lastX = null; state.lastY = null;
+
+  } else if (twoFing) {
+    // COLOR SELECT mode — use second fingertip pos for palette selection visual
+    setGestureDisplay('✌ TWO FINGERS — COLOR MODE', true);
+    lastGestureMode = 'color';
+    state.drawing = false;
+    state.lastX = null; state.lastY = null;
+
+    // Show selection ring at fingertip
+    trackCtx.beginPath();
+    trackCtx.arc(fingertip.x, fingertip.y, 20, 0, Math.PI * 2);
+    trackCtx.strokeStyle = state.color;
+    trackCtx.lineWidth = 2;
+    trackCtx.stroke();
+
+  } else if (oneFing || pinch) {
+    // DRAW mode
+    const label = state.tool === 'fill' ? '☝ TAP TO FILL' : '☝ ONE FINGER — DRAWING';
+    setGestureDisplay(label, true);
+
+    if (lastGestureMode !== 'draw') {
+      if (lastGestureMode !== '') saveSnapshot();
+      lastGestureMode = 'draw';
+      state.lastX = null; state.lastY = null;
+    }
+
+    if (state.tool === 'fill') {
+      // Fill on tap
+      if (!state._fillActive) {
+        state._fillActive = true;
+        floodFill(fingertip.x, fingertip.y, state.color);
+        playTick(550);
+        showToast('FILL APPLIED');
+        setTimeout(() => { state._fillActive = false; }, 600);
+      }
+    } else {
+      if (state.lastX !== null && state.lastY !== null) {
+        drawStroke(fingertip.x, fingertip.y, state.lastX, state.lastY);
+      }
+    }
+
+    state.lastX = fingertip.x;
+    state.lastY = fingertip.y;
+    state.drawing = true;
+
+    // Draw fingertip indicator
+    trackCtx.beginPath();
+    trackCtx.arc(fingertip.x, fingertip.y, 6, 0, Math.PI * 2);
+    trackCtx.fillStyle = state.color;
+    trackCtx.shadowColor = state.color;
+    trackCtx.shadowBlur = 15;
+    trackCtx.fill();
+
+    // Trail
+    fingerTipTrail.push({x: fingertip.x, y: fingertip.y, t: Date.now()});
+    fingerTipTrail = fingerTipTrail.filter(p => Date.now() - p.t < 300);
+    if (fingerTipTrail.length > 1) {
+      trackCtx.beginPath();
+      trackCtx.moveTo(fingerTipTrail[0].x, fingerTipTrail[0].y);
+      for (let i = 1; i < fingerTipTrail.length; i++) {
+        const alpha = i / fingerTipTrail.length;
+        trackCtx.lineTo(fingerTipTrail[i].x, fingerTipTrail[i].y);
+      }
+      trackCtx.strokeStyle = state.color + '88';
+      trackCtx.lineWidth = 2;
+      trackCtx.stroke();
+    }
+
+  } else {
+    // Neutral
+    setGestureDisplay('🤚 SHOW HAND GESTURE', false);
+    lastGestureMode = '';
+    state.drawing = false;
+    state.lastX = null; state.lastY = null;
+  }
+}
+
+function drawHandSkeleton(landmarks) {
+  const connections = [
+    [0,1],[1,2],[2,3],[3,4],
+    [0,5],[5,6],[6,7],[7,8],
+    [5,9],[9,10],[10,11],[11,12],
+    [9,13],[13,14],[14,15],[15,16],
+    [13,17],[17,18],[18,19],[19,20],[0,17]
+  ];
+
+  trackCtx.save();
+  trackCtx.globalAlpha = 0.35;
+  connections.forEach(([a, b]) => {
+    const pa = getLandmarkPos(landmarks[a]);
+    const pb = getLandmarkPos(landmarks[b]);
+    trackCtx.beginPath();
+    trackCtx.moveTo(pa.x, pa.y);
+    trackCtx.lineTo(pb.x, pb.y);
+    trackCtx.strokeStyle = '#00f5ff';
+    trackCtx.lineWidth = 1;
+    trackCtx.stroke();
+  });
+
+  landmarks.forEach((lm, i) => {
+    const p = getLandmarkPos(lm);
+    trackCtx.beginPath();
+    trackCtx.arc(p.x, p.y, i === 8 ? 5 : 2, 0, Math.PI * 2);
+    trackCtx.fillStyle = i === 8 ? '#ff006e' : '#00f5ff';
+    trackCtx.fill();
+  });
+  trackCtx.restore();
+}
+
+function setGestureDisplay(text, active) {
+  const el = document.getElementById('gesture-display');
+  el.textContent = text;
+  el.classList.toggle('active', active);
+}
+
+// ─── RECORDING ────────────────────────────────────────────
+let recInterval = null;
+
+function toggleRecording() {
+  if (!state.recording) startRecording();
+  else stopRecording();
+}
+
+function startRecording() {
+  try {
+    const compositeStream = new MediaStream();
+    const offscreen = document.createElement('canvas');
+    offscreen.width = drawCanvas.width;
+    offscreen.height = drawCanvas.height;
+    const octx = offscreen.getContext('2d');
+
+    const stream = offscreen.captureStream(30);
+    compositeStream.addTrack(stream.getVideoTracks()[0]);
+
+    function renderFrame() {
+      if (!state.recording) return;
+      octx.clearRect(0, 0, offscreen.width, offscreen.height);
+      octx.fillStyle = '#000010';
+      octx.fillRect(0, 0, offscreen.width, offscreen.height);
+      octx.save();
+      octx.scale(-1, 1);
+      octx.drawImage(webcam, -offscreen.width, 0, offscreen.width, offscreen.height);
+      octx.restore();
+      octx.drawImage(drawCanvas, 0, 0);
+      requestAnimationFrame(renderFrame);
+    }
+
+    state.mediaRecorder = new MediaRecorder(compositeStream, { mimeType: 'video/webm;codecs=vp9' });
+    state.recordChunks = [];
+    state.mediaRecorder.ondataavailable = e => { if (e.data.size > 0) state.recordChunks.push(e.data); };
+    state.mediaRecorder.onstop = saveRecording;
+    state.mediaRecorder.start(100);
+    state.recording = true;
+    state.recordStart = Date.now();
+    renderFrame();
+
+    document.getElementById('rec-btn').classList.add('recording');
+    document.getElementById('rec-label').textContent = 'STOP REC';
+    document.getElementById('rec-dot').style.display = 'inline-block';
+    document.getElementById('rec-time').style.display = 'inline';
+
+    recInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - state.recordStart) / 1000);
+      const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const s = String(elapsed % 60).padStart(2, '0');
+      document.getElementById('rec-time').textContent = m + ':' + s;
+    }, 500);
+
+    showToast('RECORDING STARTED');
+    playTick(660);
+  } catch(e) {
+    showToast('RECORDING FAILED: ' + e.message);
+  }
+}
+
+function stopRecording() {
+  state.mediaRecorder?.stop();
+  state.recording = false;
+  clearInterval(recInterval);
+  document.getElementById('rec-btn').classList.remove('recording');
+  document.getElementById('rec-label').textContent = 'RECORD';
+  document.getElementById('rec-dot').style.display = 'none';
+  document.getElementById('rec-time').style.display = 'none';
+  showToast('RECORDING SAVED');
+  playTick(440);
+}
+
+function saveRecording() {
+  const blob = new Blob(state.recordChunks, { type: 'video/webm' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'gesture-draw-' + Date.now() + '.webm';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+// ─── SCREENSHOT ───────────────────────────────────────────
+function captureScreenshot() {
+  const off = document.createElement('canvas');
+  off.width = drawCanvas.width;
+  off.height = drawCanvas.height;
+  const ctx = off.getContext('2d');
+  ctx.fillStyle = '#000010';
+  ctx.fillRect(0, 0, off.width, off.height);
+  ctx.drawImage(drawCanvas, 0, 0);
+
+  const a = document.createElement('a');
+  a.href = off.toDataURL('image/png');
+  a.download = 'gesture-draw-' + Date.now() + '.png';
+  a.click();
+  showToast('SCREENSHOT SAVED!');
+  playTick(880);
+}
+
+// ─── AUDIO FEEDBACK ───────────────────────────────────────
+function playTick(freq = 440) {
+  try {
+    if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = state.audioCtx.createOscillator();
+    const gain = state.audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(state.audioCtx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.05, state.audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, state.audioCtx.currentTime + 0.12);
+    osc.start();
+    osc.stop(state.audioCtx.currentTime + 0.12);
+  } catch(e) {}
+}
+
+// ─── TOAST ────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ─── MEDIAPIPE INIT ───────────────────────────────────────
+async function startApp() {
+  document.getElementById('instructions').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720, facingMode: 'user' } });
+    webcam.srcObject = stream;
+    await new Promise(r => webcam.onloadedmetadata = r);
+
+    // Init MediaPipe Hands
+    const hands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.75,
+      minTrackingConfidence: 0.75,
+    });
+
+    hands.onResults(onHandResults);
+
+    const camera = new Camera(webcam, {
+      onFrame: async () => { await hands.send({ image: webcam }); },
+      width: 1280,
+      height: 720,
+    });
+
+    await camera.start();
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('ui-layer').classList.add('visible');
+    showToast('HAND TRACKING ACTIVE — RAISE YOUR HAND!');
+    playTick(660);
+
+  } catch(err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('instructions').style.display = 'block';
+    const p = document.querySelector('#instructions p');
+    p.textContent = 'ERROR: ' + err.message;
+    p.style.color = '#ff006e';
+  }
+}
+
+// ─── KEYBOARD SHORTCUTS ───────────────────────────────────
+document.addEventListener('keydown', e => {
+  const map = { p: 'pencil', b: 'brush', h: 'highlighter', f: 'fill', e: 'eraser' };
+  if (map[e.key]) setTool(map[e.key]);
+  if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) undoAction();
+  if (e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey) redoAction();
+  if (e.key === 'Delete') clearCanvas();
+});
+
+// ─── MOUSE FALLBACK DRAWING ────────────────────────────────
+let mouseDrawing = false;
+drawCanvas.style.pointerEvents = 'all';
+
+drawCanvas.addEventListener('mousedown', e => {
+  mouseDrawing = true;
+  saveSnapshot();
+  state.lastX = e.clientX;
+  state.lastY = e.clientY;
+  if (state.tool === 'fill') {
+    floodFill(e.clientX, e.clientY, state.color);
+    showToast('FILL APPLIED');
+    playTick(550);
+    mouseDrawing = false;
+  }
+});
+
+drawCanvas.addEventListener('mousemove', e => {
+  if (!mouseDrawing) return;
+  if (state.tool === 'fill') return;
+  drawStroke(e.clientX, e.clientY, state.lastX || e.clientX, state.lastY || e.clientY);
+  state.lastX = e.clientX;
+  state.lastY = e.clientY;
+});
+
+drawCanvas.addEventListener('mouseup', () => { mouseDrawing = false; state.lastX = null; state.lastY = null; });
+drawCanvas.addEventListener('mouseleave', () => { mouseDrawing = false; state.lastX = null; state.lastY = null; });
+
+// Touch support
+drawCanvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  mouseDrawing = true;
+  saveSnapshot();
+  const t = e.touches[0];
+  state.lastX = t.clientX; state.lastY = t.clientY;
+}, {passive: false});
+
+drawCanvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (!mouseDrawing) return;
+  const t = e.touches[0];
+  drawStroke(t.clientX, t.clientY, state.lastX || t.clientX, state.lastY || t.clientY);
+  state.lastX = t.clientX; state.lastY = t.clientY;
+}, {passive: false});
+
+drawCanvas.addEventListener('touchend', () => { mouseDrawing = false; state.lastX = null; state.lastY = null; });
+</script>
+</body>
+</html>
