@@ -44,10 +44,10 @@ No build tools, no npm, no setup needed.
 
 1. **Clone or download** this repo
    ```bash
-   git clone https://github.com/mohit8gh/gesture-draw.git
+   git clone https://github.com/mohit8gh/MMliveDRAW.git
    ```
 
-2. **Open** `gesture-draw.html` in your browser (Chrome or Edge recommended)
+2. **Open** `(https://livecamdraw.infinityfreeapp.com/)` in your browser (Chrome or Edge recommended)
 
 3. **Allow camera access** when prompted
 
