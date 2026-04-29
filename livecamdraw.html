@@ -4,25 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MMliveDRAW — Finger Painting Studio</title>
-
 <!-- SEO -->
-<meta name="description" content="Paint in mid-air using just your hand! GestureDraw uses your webcam and AI hand tracking to turn your fingers into a paintbrush — no touch needed.">
+<meta name="description" content="Paint in mid-air using just your hand! MMliveDRAW uses your webcam and AI hand tracking to turn your fingers into a paintbrush — no touch needed.">
 <meta name="keywords" content="gesture drawing, finger painting, hand tracking, AI art, webcam drawing, MediaPipe, creative tool">
-<meta name="author" content="GestureDraw">
+<meta name="author" content="MMliveDRAW">
 
 <!-- Open Graph (WhatsApp, Facebook, LinkedIn, iMessage) -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="GestureDraw — Finger Painting Studio">
+<meta property="og:title" content="MMliveDRAW — Finger Painting Studio">
 <meta property="og:description" content="Paint in mid-air using just your hand! AI-powered hand tracking turns your fingers into a paintbrush. No touch required.">
 <meta property="og:image" content="https://ibb.co/6Jv47hWF">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="https://livecamdraw.infinityfreeapp.com/">
-<meta property="og:site_name" content="GestureDraw">
+<meta property="og:site_name" content="MMliveDRAW">
 
 <!-- Twitter / X Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="GestureDraw — Finger Painting Studio">
+<meta name="twitter:title" content="MMliveDRAW — Finger Painting Studio">
 <meta name="twitter:description" content="Paint in mid-air using just your hand! AI-powered hand tracking turns your fingers into a paintbrush. No touch required.">
 <meta name="twitter:image" content="https://ibb.co/6Jv47hWF">
 <meta name="twitter:site" content="@mohit3641">
@@ -544,7 +543,7 @@
 
   <!-- Instructions overlay -->
   <div id="instructions">
-    <h1>MM liveDRAW</h1>
+    <h1>MM live DRAW</h1>
     <p>FINGER-POWERED CREATIVE STUDIO</p>
     <button id="start-btn" onclick="startApp()">INITIALIZE CAMERA</button>
     <p style="margin-top:20px;font-size:11px;color:rgba(255,255,255,0.25)">Requires webcam access · Works best in Chrome</p>
@@ -561,7 +560,7 @@
 
     <!-- Top bar -->
     <div id="topbar">
-      <div id="logo">MM liveDRAW</div>
+      <div id="logo">MM live DRAW</div>
       <div id="status-display">
         <div class="status-item">
           <div class="status-dot" id="track-dot"></div>
@@ -1366,5 +1365,412 @@ drawCanvas.addEventListener('touchmove', e => {
 
 drawCanvas.addEventListener('touchend', () => { mouseDrawing = false; state.lastX = null; state.lastY = null; });
 </script>
+
+<!-- INFO BUTTON -->
+<style>
+  #info-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 500;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0,245,255,0.4);
+    background: rgba(5,5,20,0.75);
+    color: var(--neon-cyan);
+    font-family: 'Orbitron', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 0 18px rgba(0,245,255,0.15), 0 0 40px rgba(0,245,255,0.05);
+    transition: all 0.3s ease;
+    animation: info-float 3s ease-in-out infinite alternate;
+  }
+  #info-btn:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 30px rgba(0,245,255,0.4), 0 0 60px rgba(0,245,255,0.1);
+    transform: scale(1.12);
+    animation: none;
+  }
+  @keyframes info-float {
+    from { transform: translateY(0px); box-shadow: 0 0 18px rgba(0,245,255,0.15); }
+    to   { transform: translateY(-6px); box-shadow: 0 0 28px rgba(0,245,255,0.3), 0 8px 24px rgba(0,0,0,0.4); }
+  }
+
+  /* OVERLAY BACKDROP */
+  #info-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 600;
+    background: rgba(0,0,10,0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+  #info-overlay.open {
+    opacity: 1; pointer-events: all;
+  }
+
+  /* MODAL CARD */
+  #info-modal {
+    position: relative;
+    width: min(680px, 92vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    background: linear-gradient(145deg, rgba(5,5,25,0.97) 0%, rgba(10,0,30,0.97) 100%);
+    border: 1px solid rgba(0,245,255,0.2);
+    border-radius: 24px;
+    padding: 40px 36px 36px;
+    box-shadow: 0 0 80px rgba(0,245,255,0.08), 0 0 120px rgba(139,0,255,0.06), inset 0 1px 0 rgba(255,255,255,0.06);
+    transform: translateY(30px) scale(0.96);
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,245,255,0.2) transparent;
+  }
+  #info-overlay.open #info-modal {
+    transform: translateY(0) scale(1);
+  }
+
+  /* GLOW ORBS inside modal */
+  .modal-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(60px);
+    opacity: 0.18;
+  }
+
+  /* CLOSE BTN */
+  #info-close {
+    position: absolute;
+    top: 18px; right: 18px;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.5);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  #info-close:hover { background: rgba(255,0,110,0.15); border-color: var(--neon-pink); color: var(--neon-pink); }
+
+  /* MODAL HEADER */
+  .modal-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+  }
+  .modal-subtitle {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.25);
+    margin-bottom: 28px;
+  }
+
+  /* SECTION HEADERS */
+  .info-section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--neon-cyan);
+    opacity: 0.7;
+    margin: 24px 0 12px;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .info-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(0,245,255,0.2), transparent);
+  }
+
+  /* GESTURE CARDS */
+  .gesture-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .gesture-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex; align-items: flex-start; gap: 12px;
+    transition: all 0.2s;
+    cursor: default;
+  }
+  .gesture-card:hover {
+    background: rgba(0,245,255,0.05);
+    border-color: rgba(0,245,255,0.2);
+    transform: translateY(-2px);
+  }
+  .gesture-emoji {
+    font-size: 26px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .gesture-info { display: flex; flex-direction: column; gap: 3px; }
+  .gesture-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--neon-cyan);
+  }
+  .gesture-desc {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.5;
+  }
+
+  /* TOOL ROWS */
+  .tool-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    margin-bottom: 6px;
+    transition: all 0.2s;
+  }
+  .tool-row:hover { background: rgba(139,0,255,0.06); border-color: rgba(139,0,255,0.2); }
+  .tool-key {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--neon-purple);
+    background: rgba(139,0,255,0.12);
+    border: 1px solid rgba(139,0,255,0.3);
+    border-radius: 6px;
+    padding: 3px 8px;
+    min-width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .tool-label { font-size: 12px; color: rgba(255,255,255,0.55); }
+  .tool-label strong { color: rgba(255,255,255,0.85); font-weight: 500; }
+
+  /* SHORTCUT CHIPS */
+  .shortcut-row {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;
+  }
+  .shortcut-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 11px; color: rgba(255,255,255,0.5);
+  }
+  .kbd {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    color: var(--neon-amber);
+    background: rgba(255,170,0,0.1);
+    border: 1px solid rgba(255,170,0,0.25);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+
+  /* AUTHOR CARD */
+  .author-card {
+    margin-top: 28px;
+    border-radius: 18px;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(0,245,255,0.05) 0%, rgba(139,0,255,0.08) 100%);
+    border: 1px solid rgba(0,245,255,0.15);
+    display: flex; align-items: center; gap: 20px;
+    position: relative; overflow: hidden;
+  }
+  .author-avatar {
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 20px;
+    font-weight: 900;
+    color: #000;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(0,245,255,0.3);
+  }
+  .author-info { flex: 1; }
+  .author-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    background: linear-gradient(90deg, #fff, var(--neon-cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+  }
+  .author-role {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .insta-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 0, 110, 0.4);
+    background: rgba(255, 0, 110, 0.08);
+    color: #ff69b4;
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-decoration: none;
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+  .insta-btn:hover {
+    background: rgba(255,0,110,0.18);
+    border-color: var(--neon-pink);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(255,0,110,0.3);
+    transform: translateX(3px);
+  }
+  .insta-icon { font-size: 14px; }
+
+  /* DIVIDER */
+  .modal-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+    margin: 6px 0;
+  }
+
+  /* SCROLLBAR */
+  #info-modal::-webkit-scrollbar { width: 4px; }
+  #info-modal::-webkit-scrollbar-track { background: transparent; }
+  #info-modal::-webkit-scrollbar-thumb { background: rgba(0,245,255,0.2); border-radius: 4px; }
+</style>
+
+<!-- Info Button -->
+<button id="info-btn" onclick="openInfo()" title="How to use / About">?</button>
+
+<!-- Info Overlay -->
+<div id="info-overlay" onclick="handleOverlayClick(event)">
+  <div id="info-modal">
+    <!-- Glow orbs -->
+    <div class="modal-orb" style="width:220px;height:220px;background:var(--neon-cyan);top:-60px;right:-40px;"></div>
+    <div class="modal-orb" style="width:180px;height:180px;background:var(--neon-purple);bottom:-40px;left:-30px;"></div>
+
+    <button id="info-close" onclick="closeInfo()">✕</button>
+
+    <div class="modal-title">HOW TO USE</div>
+    <div class="modal-subtitle">MM live DRAW · FINGER-POWERED CREATIVE STUDIO</div>
+
+    <!-- GESTURES -->
+    <div class="info-section-title">Hand Gestures</div>
+    <div class="gesture-grid">
+      <div class="gesture-card">
+        <div class="gesture-emoji">☝️</div>
+        <div class="gesture-info">
+          <div class="gesture-name">ONE FINGER</div>
+          <div class="gesture-desc">Draw mode — point your index finger to paint on the canvas</div>
+        </div>
+      </div>
+      <div class="gesture-card">
+        <div class="gesture-emoji">✌️</div>
+        <div class="gesture-info">
+          <div class="gesture-name">TWO FINGERS</div>
+          <div class="gesture-desc">Color mode — lift two fingers to activate palette selection</div>
+        </div>
+      </div>
+      <div class="gesture-card">
+        <div class="gesture-emoji">✋</div>
+        <div class="gesture-info">
+          <div class="gesture-name">OPEN PALM</div>
+          <div class="gesture-desc">Erase mode — show full palm to sweep-erase the canvas</div>
+        </div>
+      </div>
+      <div class="gesture-card">
+        <div class="gesture-emoji">🤏</div>
+        <div class="gesture-info">
+          <div class="gesture-name">PINCH</div>
+          <div class="gesture-desc">Also activates draw — pinch thumb & index to start a stroke</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOLS -->
+    <div class="info-section-title">Drawing Tools</div>
+    <div class="tool-row"><span class="tool-key">P</span><span class="tool-label"><strong>Pencil</strong> — thin, precise crisp lines</span></div>
+    <div class="tool-row"><span class="tool-key">B</span><span class="tool-label"><strong>Brush</strong> — thick strokes with neon glow shadow</span></div>
+    <div class="tool-row"><span class="tool-key">H</span><span class="tool-label"><strong>Marker</strong> — semi-transparent highlight overlay</span></div>
+    <div class="tool-row"><span class="tool-key">F</span><span class="tool-label"><strong>Fill</strong> — tap inside a closed shape to flood fill</span></div>
+    <div class="tool-row"><span class="tool-key">E</span><span class="tool-label"><strong>Eraser</strong> — erase by tool or use open palm gesture</span></div>
+
+    <!-- KEYBOARD SHORTCUTS -->
+    <div class="info-section-title">Keyboard Shortcuts</div>
+    <div class="shortcut-row">
+      <div class="shortcut-chip"><span class="kbd">Ctrl Z</span> Undo</div>
+      <div class="shortcut-chip"><span class="kbd">Ctrl ⇧ Z</span> Redo</div>
+      <div class="shortcut-chip"><span class="kbd">Del</span> Clear canvas</div>
+      <div class="shortcut-chip"><span class="kbd">P B H F E</span> Switch tools</div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="info-section-title">Other Features</div>
+    <div class="shortcut-row">
+      <div class="shortcut-chip">🎥 Record webcam + drawing as WebM</div>
+      <div class="shortcut-chip">📷 Screenshot saves as PNG</div>
+      <div class="shortcut-chip">🎨 12-color neon palette</div>
+      <div class="shortcut-chip">🔊 Sound feedback on actions</div>
+      <div class="shortcut-chip">🖱️ Mouse &amp; touch also work</div>
+      <div class="shortcut-chip">↕️ Opacity slider in tool panel</div>
+    </div>
+
+    <div class="modal-divider" style="margin-top:24px;"></div>
+
+    <!-- AUTHOR -->
+    <div class="author-card">
+      <div class="author-avatar">MM</div>
+      <div class="author-info">
+        <div class="author-name">MOHIT MILAN</div>
+        <div class="author-role">CREATOR · MM live DRAW</div>
+        <a class="insta-btn" href="https://www.instagram.com/mohit.3641_" target="_blank" rel="noopener">
+          <span class="insta-icon">📸</span> @mohit.3641_
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function openInfo() {
+    document.getElementById('info-overlay').classList.add('open');
+    try { playTick(440); } catch(e) {}
+  }
+  function closeInfo() {
+    document.getElementById('info-overlay').classList.remove('open');
+    try { playTick(330); } catch(e) {}
+  }
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('info-overlay')) closeInfo();
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeInfo();
+  });
+</script>
+<script data-goatcounter="https://mohit.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
