@@ -88,8 +88,8 @@ gesture-draw/
 ## 🖼️ Screenshots
 
 <!-- Add your screenshots here -->
-| Start Screen | Drawing Mode |
-|---|---|
+| Drawing Mode |
+|---|
 | ![drawing](https://i.ibb.co/93wqkXrW/Chat-GPT-Image-Apr-28-2026-08-23-46-AM-1.png) |
 
 ---
